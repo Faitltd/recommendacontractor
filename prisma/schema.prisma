@@ -1,0 +1,221 @@
+// Recommend a Contractor - Database Schema
+// PostgreSQL database schema for contractor rating platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for clients who leave reviews
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String
+  facebookId  String?  @unique
+  googleId    String?  @unique
+  avatar      String?
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  reviews     Review[]
+
+  @@map("users")
+}
+
+// Contractor categories (trades)
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  parentId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  contractors ContractorCategory[]
+
+  @@map("categories")
+}
+
+// Contractor profiles
+model Contractor {
+  id                String   @id @default(cuid())
+  businessName      String
+  ownerName         String
+  email             String   @unique
+  phone             String
+  website           String?
+  description       String?
+  yearsInBusiness   Int
+  licenseNumber     String?
+  insuranceInfo     String?
+  serviceRadius     Int      @default(25) // miles
+  serviceAreas      String[] // ZIP codes or cities
+  verified          Boolean  @default(false)
+  featuredUntil     DateTime?
+  averageRating     Float    @default(0)
+  totalReviews      Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  categories        ContractorCategory[]
+  reviews           Review[]
+  advertisements    Advertisement[]
+  disputes          ReviewDispute[]
+
+  @@map("contractors")
+}
+
+// Junction table for contractor categories
+model ContractorCategory {
+  id           String @id @default(cuid())
+  contractorId String
+  categoryId   String
+
+  // Relations
+  contractor   Contractor @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+  category     Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([contractorId, categoryId])
+  @@map("contractor_categories")
+}
+
+// Reviews left by users for contractors
+model Review {
+  id                   String   @id @default(cuid())
+  userId               String
+  contractorId         String
+  overallRating        Float
+  qualityRating        Float
+  timelinessRating     Float
+  communicationRating  Float
+  pricingRating        Float
+  cleanlinessRating    Float
+  title                String
+  content              String
+  workCity             String
+  workDate             DateTime?
+  projectCost          Float?
+  wouldRecommend       Boolean  @default(true)
+  verified             Boolean  @default(false)
+  helpful              Int      @default(0)
+  notHelpful           Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  // Relations
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contractor           Contractor @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+  photos               ReviewPhoto[]
+  documents            ReviewDocument[]
+  disputes             ReviewDispute[]
+
+  @@map("reviews")
+}
+
+// Photos attached to reviews
+model ReviewPhoto {
+  id           String @id @default(cuid())
+  reviewId     String
+  url          String
+  thumbnailUrl String
+  caption      String?
+  order        Int    @default(0)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  review       Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("review_photos")
+}
+
+// Documents (estimates/invoices) attached to reviews
+model ReviewDocument {
+  id        String @id @default(cuid())
+  reviewId  String
+  type      DocumentType
+  url       String
+  filename  String
+  size      Int
+  createdAt DateTime @default(now())
+
+  // Relations
+  review    Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("review_documents")
+}
+
+// Advertisements purchased by contractors
+model Advertisement {
+  id           String   @id @default(cuid())
+  contractorId String
+  type         AdType
+  title        String
+  description  String?
+  imageUrl     String?
+  targetUrl    String?
+  categories   String[] // Category IDs
+  locations    String[] // ZIP codes or cities
+  startDate    DateTime
+  endDate      DateTime
+  budget       Float
+  impressions  Int      @default(0)
+  clicks       Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  contractor   Contractor @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+
+  @@map("advertisements")
+}
+
+// Review disputes submitted by contractors
+model ReviewDispute {
+  id           String        @id @default(cuid())
+  reviewId     String
+  contractorId String
+  reason       String
+  description  String
+  status       DisputeStatus @default(PENDING)
+  adminNotes   String?
+  resolution   String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  resolvedAt   DateTime?
+
+  // Relations
+  review       Review     @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  contractor   Contractor @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+
+  @@map("review_disputes")
+}
+
+// Enums
+enum DocumentType {
+  ESTIMATE
+  INVOICE
+}
+
+enum AdType {
+  FEATURED_LISTING
+  BANNER
+}
+
+enum DisputeStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+}
