@@ -6,6 +6,8 @@ WORKDIR /app
 RUN apk add --no-cache libc6-compat
 COPY package*.json ./
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
+# Generate lockfile (no installs) to allow reproducible npm ci even if lock is missing in repo
+RUN npm install --package-lock-only --ignore-scripts
 RUN npm ci
 # Copy application source
 COPY . .
