@@ -6,11 +6,11 @@ WORKDIR /app
 RUN apk add --no-cache libc6-compat
 COPY package*.json ./
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
-# Generate lockfile (no installs) to allow reproducible npm ci even if lock is missing in repo
-RUN npm install --package-lock-only --ignore-scripts
-RUN npm ci
+RUN npm ci --ignore-scripts
 # Copy application source
 COPY . .
+# Now run prepare with svelte.config.js present
+RUN npm run prepare
 # Generate Prisma client before building (needed during SSR/prerender)
 RUN npx prisma generate
 # Build the SvelteKit app
