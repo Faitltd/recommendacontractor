@@ -5,7 +5,7 @@ WORKDIR /app
 RUN apk add --no-cache libc6-compat
 COPY package*.json ./
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
-RUN npm ci
+RUN npm install
 # Copy application source
 COPY . .
 # Generate Prisma client before building (needed during SSR/prerender)
