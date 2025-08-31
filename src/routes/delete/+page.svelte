@@ -1,22 +1,9 @@
 <script lang="ts">
-  import { user } from '$lib/stores/auth';
-  import { derived } from 'svelte/store';
+  import { page } from '$app/stores';
 
-  // Build a mailto link that pre-fills the message with UID/email if available
-  const mailtoHref = derived(user, ($user) => {
-    const to = 'support@recommendacontractor.com';
-    const subject = encodeURIComponent('Data Deletion Request');
-    const body = encodeURIComponent([
-      'Please delete my account and all associated personal data.','',
-      $user?.uid ? `UID: ${$user.uid}` : 'UID: (add your UID if signed in)',
-      $user?.email ? `Email: ${$user.email}` : 'Email: (your email)',
-      '',
-      'I understand this request may require identity verification.'
-    ].join('\n'));
-    return `mailto:${to}?subject=${subject}&body=${body}`;
-  });
+  let copied = $state(false);
+  let mailtoHref = $state('');
 
-  let copied = false;
   function copy(text: string) {
     if (!text) return;
     navigator.clipboard.writeText(text).then(() => {
@@ -24,6 +11,21 @@
       setTimeout(() => (copied = false), 2000);
     });
   }
+
+  $effect(() => {
+    const u = $page.data.session?.user;
+    const to = 'support@recommendacontractor.com';
+    const subject = encodeURIComponent('Data Deletion Request');
+    const body = encodeURIComponent([
+      'Please delete my account and all associated personal data.',
+      '',
+      u?.id ? `UID: ${u.id}` : 'UID: (add your UID if signed in)',
+      u?.email ? `Email: ${u.email}` : 'Email: (your email)',
+      '',
+      'I understand this request may require identity verification.'
+    ].join('\n'));
+    mailtoHref = `mailto:${to}?subject=${subject}&body=${body}`;
+  });
 </script>
 
 <svelte:head>
@@ -42,18 +44,18 @@
   <section class="mt-8 space-y-4">
     <h2 class="text-xl font-semibold">If you are signed in</h2>
     <div class="rounded-lg border bg-white p-4 shadow-sm">
-      {#if $user}
-        <p class="text-sm text-gray-700">Signed in as <span class="font-medium">{$user.email}</span></p>
+      {#if $page.data.session?.user}
+        <p class="text-sm text-gray-700">Signed in as <span class="font-medium">{$page.data.session.user.email}</span></p>
         <div class="mt-2 flex items-center gap-2">
-          <code class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-800">UID: {$user.uid}</code>
-          <button class="text-xs rounded bord px-2 py-1 hover-bg-gray-50" on:click=(() => copy($user!.uid))>{copied ? 'Copied!' : 'Copy UID' }</button>
+          <code class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-800">UID: {$page.data.session.user.id}</code>
+          <button class="text-xs rounded border px-2 py-1 hover:bg-gray-50" onclick={() => copy($page.data.session!.user!.id!)}>{copied ? 'Copied!' : 'Copy UID'}</button>
         </div>
         <p class="mt-3 text-sm text-gray-700">To request deletion now, email us using the button below. Your UID helps us verify your identity and find your data.</p>
       {:else}
         <p class="text-sm text-gray-700">Sign in first to include your UID automatically in the request, or include it manually if you know it.</p>
       {/if}
       <div class="mt-4">
-        <a class="inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700" href={$mailtoHref} rel="nofollow">Email data deletion request</a>
+        <a class="inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700" href={mailtoHref} rel="nofollow">Email data deletion request</a>
       </div>
     </div>
   </section>
