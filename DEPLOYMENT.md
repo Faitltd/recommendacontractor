@@ -8,11 +8,11 @@ Prerequisites
 
 Build and push container (Artifact Registry)
 1. Set variables
-   # Use the itsfait.com project
+   # Use the recommendacontractor project
    PROJECT_ID=recommendacontractor
    REGION=us-central1
    REPO=sveltekit
-   IMAGE=$REGION-docker.pkg.dev/$PROJECT_ID/$REPO/recomendacontractor
+   IMAGE=$REGION-docker.pkg.dev/$PROJECT_ID/$REPO/recommendacontractor
 
 2. Create Artifact Registry repo (one-time)
    gcloud artifacts repositories create $REPO \
@@ -22,6 +22,22 @@ Build and push container (Artifact Registry)
 
 3. Build and push
    gcloud builds submit --tag $IMAGE .
+
+4. Deploy to Cloud Run
+   gcloud run deploy recommendacontractor \
+     --image $IMAGE \
+     --region $REGION \
+     --platform managed \
+     --allow-unauthenticated \
+     --port 3000 \
+     --memory 512Mi \
+     --cpu 1 \
+     --set-env-vars NODE_ENV=production \
+     --set-env-vars PUBLIC_APP_URL=https://recommendacontractor.co \
+     --set-env-vars DATABASE_URL=$DATABASE_URL \
+     --set-env-vars AUTH_SECRET=$AUTH_SECRET \
+     --set-env-vars GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID \
+     --set-env-vars GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
 
 Deploy to Cloud Run
 1. Deploy service

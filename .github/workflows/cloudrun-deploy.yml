@@ -61,13 +61,12 @@ jobs:
             --cpu 1 --memory 512Mi \
             --max-instances 5 \
             --set-env-vars NODE_ENV=production \
+            --set-env-vars PUBLIC_APP_URL='https://recommendacontractor.co' \
             --set-env-vars DATABASE_URL='${{ secrets.PROD_DATABASE_URL }}' \
             --set-env-vars AUTH_SECRET='${{ secrets.PROD_AUTH_SECRET }}' \
             --set-env-vars GOOGLE_CLIENT_ID='${{ secrets.PROD_GOOGLE_CLIENT_ID }}' \
             --set-env-vars GOOGLE_CLIENT_SECRET='${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}' \
             --set-env-vars FACEBOOK_CLIENT_ID='${{ secrets.PROD_FACEBOOK_CLIENT_ID }}' \
-            --set-env-vars FACEBOOK_CLIENT_SECRET='${{ secrets.PROD_FACEBOOK_CLIENT_SECRET }}' \
-            --set-env-vars NEXTAUTH_URL='${{ secrets.PROD_NEXTAUTH_URL }}' \
-            --set-env-vars AUTH_URL='${{ secrets.PROD_AUTH_URL }}'
+            --set-env-vars FACEBOOK_CLIENT_SECRET='${{ secrets.PROD_FACEBOOK_CLIENT_SECRET }}'
       - name: Show service URL
         run: gcloud run services describe ${{ env.SERVICE_NAME }} --region=${{ secrets.GCP_REGION }} --format='value(status.url)'
