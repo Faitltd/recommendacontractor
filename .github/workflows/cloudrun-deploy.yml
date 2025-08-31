@@ -1,32 +1,42 @@
 name: Build & Deploy to Cloud Run (WIF)
+
 on:
   push:
     branches: ["main"]
+
 permissions:
   contents: read
   id-token: write
+
 env:
   SERVICE_NAME: recommendacontractor
   IMAGE_NAME: recommendacontractor
   AR_REPO_ID: app-images
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       # Auth to Google Cloud using Workload Identity Federation
       - name: Auth to Google Cloud (WIF)
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
         with:
-          project_id: recommendacontractor
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          export_default_credentials: true
+
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
+
       # Create AR repo if it doesn't exist (safe to ignore error)
       - name: Ensure Artifact Registry repo exists
         run: |
@@ -34,24 +44,27 @@ jobs:
             --repository-format=docker \
             --location=${{ secrets.GCP_REGION }} \
             --description="Docker images for recommendacontractor" || true
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.GCP_REGION }}-docker.pkg.dev/recommendacontractor/${{ env.AR_REPO_ID }}/${{ env.IMAGE_NAME }}
+          images: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.AR_REPO_ID }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha
             type=ref,event=branch
             type=raw,value=latest
+
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
       - name: Deploy to Cloud Run
         run: |
-          IMAGE="${{ secrets.GCP_REGION }}-docker.pkg.dev/recommendacontractor/${{ env.AR_REPO_ID }}/${{ env.IMAGE_NAME }}:latest"
+          IMAGE="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.AR_REPO_ID }}/${{ env.IMAGE_NAME }}:latest"
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image "$IMAGE" \
             --platform managed \
@@ -60,6 +73,8 @@ jobs:
             --port 3000 \
             --cpu 1 --memory 512Mi \
             --max-instances 5 \
+            --service-account ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }} \
+            --add-cloudsql-instances ${{ secrets.CLOUDSQL_INSTANCE }} \
             --set-env-vars NODE_ENV=production \
             --set-env-vars PUBLIC_APP_URL='https://recommendacontractor.co' \
             --set-env-vars DATABASE_URL='${{ secrets.PROD_DATABASE_URL }}' \
@@ -68,5 +83,6 @@ jobs:
             --set-env-vars GOOGLE_CLIENT_SECRET='${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}' \
             --set-env-vars FACEBOOK_CLIENT_ID='${{ secrets.PROD_FACEBOOK_CLIENT_ID }}' \
             --set-env-vars FACEBOOK_CLIENT_SECRET='${{ secrets.PROD_FACEBOOK_CLIENT_SECRET }}'
+
       - name: Show service URL
         run: gcloud run services describe ${{ env.SERVICE_NAME }} --region=${{ secrets.GCP_REGION }} --format='value(status.url)'
