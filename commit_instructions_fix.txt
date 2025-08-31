@@ -1,0 +1,15 @@
+Run these commands locally to commit and push the Dockerfile lifecycle fix:
+
+cd /Users/raymondkinneiii/Documents/augment-projects/recomendacontractor
+
+git checkout -b fix/docker-prepare-order || true
+
+git add Dockerfile
+
+git commit -m "build: run npm ci --ignore-scripts; run prepare after copying sources"
+
+git push -u origin fix/docker-prepare-order
+
+# Open a PR and merge, or push directly to main:
+# git push origin HEAD:main
+

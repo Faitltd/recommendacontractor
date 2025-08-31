@@ -1,0 +1,22 @@
+Run these commands locally to commit and push the build fixes:
+
+1) Ensure you are at the repo root:
+   cd /Users/raymondkinneiii/Documents/augment-projects/recomendacontractor
+
+2) Create a new branch (optional):
+   git checkout -b fix/docker-build-node22
+
+3) Stage and commit changes:
+   git add Dockerfile package.json
+   git commit -m "build: use Node 22 in builder, skip Prisma postinstall generate, and build with svelte-kit"
+
+4) Push the branch and open a PR (or push to main if you prefer):
+   git push -u origin fix/docker-build-node22
+
+5) Merge to main. The GitHub Action "Build & Deploy to Cloud Run (WIF)" will trigger automatically.
+
+If you prefer to push directly to main:
+   git add Dockerfile package.json
+   git commit -m "build: use Node 22 in builder, skip Prisma postinstall generate, and build with svelte-kit"
+   git push origin main
+
