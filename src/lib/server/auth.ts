@@ -57,7 +57,6 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
   },
   // Keep only a custom error page (no custom signIn to avoid redirect loop)
   pages: {
-    signIn: '/auth/login',
     error: '/auth/error'
   },
   events: {
