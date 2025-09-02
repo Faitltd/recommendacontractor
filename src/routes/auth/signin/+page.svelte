@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { signIn } from '@auth/sveltekit/client';
+  import { startSocialLogin } from '$lib/auth/client';
 
   let loadingFacebook = $state(false);
   let loadingGoogle = $state(false);
@@ -7,11 +7,7 @@
   async function handleFacebookSignIn() {
     loadingFacebook = true;
     try {
-      // Get callback URL from current URL params if available
-      const urlParams = new URLSearchParams(window.location.search);
-      const callbackUrl = urlParams.get('callbackUrl') || '/';
-
-      await signIn('facebook', { callbackUrl });
+      await startSocialLogin('facebook');
     } catch (error) {
       console.error('Facebook sign in error:', error);
       loadingFacebook = false;
@@ -21,10 +17,7 @@
   async function handleGoogleSignIn() {
     loadingGoogle = true;
     try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const callbackUrl = urlParams.get('callbackUrl') || '/';
-
-      await signIn('google', { callbackUrl });
+      await startSocialLogin('google');
     } catch (error) {
       console.error('Google sign in error:', error);
       loadingGoogle = false;
@@ -50,7 +43,7 @@
       </div>
 
       <div class="space-y-4">
-        <button on:click={handleFacebookSignIn} disabled={loadingFacebook} class="btn btn-primary w-full btn-lg shadow-professional hover:shadow-professional-lg transition-all duration-200">
+        <button onclick={handleFacebookSignIn} disabled={loadingFacebook} class="btn btn-primary w-full btn-lg shadow-professional hover:shadow-professional-lg transition-all duration-200">
           {#if loadingFacebook}
             <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -65,7 +58,7 @@
           {/if}
         </button>
 
-        <button on:click={handleGoogleSignIn} disabled={loadingGoogle} class="btn btn-outline w-full btn-lg flex items-center justify-center">
+        <button onclick={handleGoogleSignIn} disabled={loadingGoogle} class="btn btn-outline w-full btn-lg flex items-center justify-center">
           {#if loadingGoogle}
             <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

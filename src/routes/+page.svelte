@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { signIn } from '@auth/sveltekit/client';
+	import { startSocialLogin } from '$lib/auth/client';
 	let { data } = $props();
 	
 	let searchQuery = $state('');
@@ -15,21 +15,17 @@
 	async function handleFacebookSignIn() {
 		loadingFacebook = true;
 		try {
-			const urlParams = new URLSearchParams(window.location.search);
-			const callbackUrl = urlParams.get('callbackUrl') || '/';
-			await signIn('facebook', { callbackUrl });
+			await startSocialLogin('facebook');
 		} catch (e) {
 			console.error('Facebook sign in error:', e);
 			loadingFacebook = false;
 		}
 	}
-	
+
 	async function handleGoogleSignIn() {
 		loadingGoogle = true;
 		try {
-			const urlParams = new URLSearchParams(window.location.search);
-			const callbackUrl = urlParams.get('callbackUrl') || '/';
-			await signIn('google', { callbackUrl });
+			await startSocialLogin('google');
 		} catch (e) {
 			console.error('Google sign in error:', e);
 			loadingGoogle = false;

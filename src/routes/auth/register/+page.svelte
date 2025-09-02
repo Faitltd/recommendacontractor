@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { signIn } from '@auth/sveltekit/client';
+  import { startSocialLogin } from '$lib/auth/client';
 
   let loading = $state(false);
   let error = $state('');
@@ -12,7 +12,7 @@
 
     try {
       // After successful OAuth, Auth.js will redirect back to this page and session is set
-      await signIn(socialProvider, { callbackUrl: '/' });
+      await startSocialLogin(socialProvider, { callbackUrl: '/' });
     } catch (err: any) {
       error = err?.message || 'Sign-in failed. Please try again.';
       loading = false;

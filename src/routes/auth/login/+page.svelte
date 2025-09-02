@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { signIn } from '@auth/sveltekit/client';
+  import { startSocialLogin } from '$lib/auth/client';
 
   let loading = $state(false);
   let error = $state('');
@@ -11,8 +11,7 @@
     error = '';
 
     try {
-      const callbackUrl = '/';
-      await signIn(socialProvider, { callbackUrl });
+      await startSocialLogin(socialProvider);
     } catch (err: any) {
       error = err?.message || 'Sign-in failed. Please try again.';
       loading = false;
