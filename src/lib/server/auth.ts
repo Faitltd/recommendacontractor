@@ -32,12 +32,25 @@ const providers = [
   })
 ];
 
+const useAdapter = env.AUTH_DISABLE_ADAPTER !== 'true';
+
 export const { handle, signIn, signOut } = SvelteKitAuth({
-  adapter: PrismaAdapter(db),
+  adapter: useAdapter ? PrismaAdapter(db) : undefined,
   providers,
   // Prefer AUTH_SECRET, fall back to NEXTAUTH_SECRET if present
   secret: env.AUTH_SECRET || env.NEXTAUTH_SECRET,
   trustHost: true,
+  logger: {
+    error(code, metadata) {
+      console.error('Auth.js error', code, metadata);
+    },
+    warn(code, metadata) {
+      console.warn('Auth.js warn', code, metadata);
+    },
+    debug(code, metadata) {
+      if (env.AUTH_DEBUG === 'true') console.log('Auth.js debug', code, metadata);
+    }
+  },
   callbacks: {
     async session({ session, user }) {
       if (session.user) {
