@@ -1,14 +1,27 @@
+import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { handle as authHandle } from './lib/server/auth.js';
-import type { Handle } from '@sveltejs/kit';
 
-// Custom handle function for additional server-side logic
-const customHandle: Handle = async ({ event, resolve }) => {
-  // Add any custom server-side logic here
-  // For example, rate limiting, logging, etc.
-  
-  return resolve(event);
+// Strip Client Hints headers to avoid Chrome restart loops on Auth.js endpoints
+const stripClientHints: Handle = async ({ event, resolve }) => {
+  const response = await resolve(event, {
+    filterSerializedResponseHeaders(name) {
+      return !/^(accept-ch|critical-ch|permissions-policy|sec-ch-|vary)$/i.test(name);
+    }
+  });
+
+  // Hard delete any Client Hints headers that may have slipped through
+  ['accept-ch', 'critical-ch', 'permissions-policy'].forEach((header) =>
+    response.headers.delete(header)
+  );
+
+  // Remove sec-ch-* references from Vary header
+  const vary = response.headers.get('vary');
+  if (vary && /sec-ch-/i.test(vary)) {
+    response.headers.delete('vary');
+  }
+
+  return response;
 };
 
-// Combine authentication handle with custom handle
-export const handle = sequence(authHandle, customHandle);
+export const handle: Handle = sequence(authHandle, stripClientHints);
