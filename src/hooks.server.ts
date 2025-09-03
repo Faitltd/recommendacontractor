@@ -24,4 +24,4 @@ const stripClientHints: Handle = async ({ event, resolve }) => {
   return response;
 };
 
-export const handle: Handle = sequence(authHandle, stripClientHints);
+export const handle: Handle = sequence(stripClientHints, authHandle);
