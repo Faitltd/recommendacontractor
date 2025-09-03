@@ -48,7 +48,7 @@
 
       <div class="space-y-4">
         <a
-          href="/auth/signin"
+          href="/auth/login"
           class="btn btn-primary w-full"
         >
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
