@@ -6,6 +6,22 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { db } from './db.js';
 import { env } from '$env/dynamic/private';
 
+
+// Lightweight diagnostics to help trace production configuration issues (no secrets logged)
+const hasAuthSecret = !!(env.AUTH_SECRET || env.NEXTAUTH_SECRET);
+const hasGoogleCreds = !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+const publicAuthUrl = env.AUTH_URL || env.NEXTAUTH_URL || env.PUBLIC_APP_URL;
+
+if (!hasAuthSecret) {
+  console.error('Auth.js configuration: Missing AUTH_SECRET (or NEXTAUTH_SECRET)');
+}
+if (!publicAuthUrl) {
+  console.warn('Auth.js configuration: Missing AUTH_URL/NEXTAUTH_URL/PUBLIC_APP_URL');
+}
+if (!hasGoogleCreds) {
+  console.warn('Auth.js configuration: Missing GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET');
+}
+
 // Configure providers conditionally to avoid build-time env requirements
 const providers = [];
 
