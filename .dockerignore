@@ -1,13 +1,10 @@
+# keep configs in the context!
+# DO NOT ignore: svelte.config.js, vite.config.ts, tsconfig*, prisma/
+
 node_modules
+.git
 .svelte-kit
 build
-.vscode
-.git
-.gitignore
+dist
+npm-debug.log
 .DS_Store
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.env
-.env.*
-
